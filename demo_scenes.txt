@@ -1,0 +1,2 @@
+detected cuts (scene-change > 0.3):
+  none detected

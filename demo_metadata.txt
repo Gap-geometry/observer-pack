@@ -1,0 +1,4 @@
+file: demo_adjust_glasses.mp4
+duration: 12.00 s
+video: 960x540 h264 30/1 fps
+audio: aac 48000 Hz 2 ch

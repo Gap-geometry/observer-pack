@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adjust Glasses — observer pack demo</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #0c1322;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+<canvas id="gapCanvas"></canvas>
+<script>
+const canvas = document.getElementById('gapCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+const particles = [];
+const wordBank = ["adjust", "glasses", "adjust", "see"];
+
+function spacingForViewport() {
+    const area = canvas.width * canvas.height;
+    const target = 2200;
+    const raw = Math.sqrt(area / target);
+    return { x: Math.max(34, raw * 1.6), y: Math.max(15, raw * 0.7) };
+}
+
+class BitParticle {
+    constructor(x, y) {
+        this.baseX = x; this.baseY = y; this.x = x; this.y = y;
+        this.text = wordBank[Math.floor(Math.random() * wordBank.length)];
+        this.fontSize = Math.floor(Math.random() * 4) + 9;
+        this.alpha = Math.random() * 0.4 + 0.3;
+        this.currentAlpha = this.alpha;
+        this.heat = 0; // how compressed against the boundary this bit is (0..1)
+    }
+
+    update(gapX, gapY, gapRadius) {
+        let dx = this.x - gapX;
+        let dy = this.y - gapY;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 0.0001) {
+            dx = (Math.random() - 0.5); dy = (Math.random() - 0.5);
+            distance = Math.sqrt(dx * dx + dy * dy) || 1;
+        }
+
+        if (distance < gapRadius) {
+            let force = (gapRadius - distance) / gapRadius;
+            this.x += (dx / distance) * force * 8;
+            this.y += (dy / distance) * force * 8;
+            this.currentAlpha = Math.min(this.alpha * 2.2, 0.95);
+            // heat rises with compression — the cost paid at the shore
+            this.heat += (force - this.heat) * 0.12;
+        } else {
+            this.x += (this.baseX - this.x) * 0.08;
+            this.y += (this.baseY - this.y) * 0.08;
+            this.currentAlpha = this.alpha;
+            this.heat += (0 - this.heat) * 0.06; // cools as it drifts home
+        }
+    }
+
+    draw() {
+        // Cool geometric ink (138,160,192) warming toward amber cost (232,180,120) at the shore
+        const r = Math.round(138 + (232 - 138) * this.heat);
+        const g = Math.round(160 + (180 - 160) * this.heat);
+        const b = Math.round(192 + (120 - 192) * this.heat);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.currentAlpha})`;
+        ctx.font = `${this.fontSize}px "Segoe UI", system-ui, sans-serif`;
+        ctx.fillText(this.text, this.x, this.y);
+    }
+}
+
+function initGrid() {
+    particles.length = 0;
+    const s = spacingForViewport();
+    for (let x = 10; x < canvas.width; x += s.x) {
+        for (let y = 20; y < canvas.height; y += s.y) {
+            particles.push(new BitParticle(x, y));
+        }
+    }
+}
+initGrid();
+window.addEventListener('resize', initGrid);
+
+let time = 0;
+window.__capture = false;
+window.__renderFrame = function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Held, deliberate drift — much slower, smaller wander than a screensaver
+    const gapX = canvas.width / 2 + Math.cos(time * 0.0018) * (canvas.width * 0.06);
+    const gapY = canvas.height / 2 + Math.sin(time * 0.0026) * (canvas.height * 0.05);
+
+    // Gentler breathing
+    const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+    const gapRadius = baseRadius + Math.sin(time * 0.012) * 10;
+
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].update(gapX, gapY, gapRadius);
+        particles[i].draw();
+    }
+
+    time += 1;
+};
+function loop(){ if(!window.__capture) window.__renderFrame(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
