@@ -11,6 +11,10 @@ transcode, describe — on every iteration.
 
 **The workaround:** project the mp4 into layers the model *can* read, and hand it those.
 
+```bash
+python3 observer_pack.py your_video.mp4
+```
+
 ---
 
 ## What we handed the model, and what it actually got from each layer
@@ -52,6 +56,51 @@ Two things we take from that:
 
 ---
 
+## A self-testing demo — check it yourself
+
+`demo_adjust_glasses.mp4` is a 12-second synthetic film made **only** to test the pack. Nothing in
+it is anyone's artwork. Its soundtrack has **deliberately known features**, so the projections can
+be checked against ground truth:
+
+| designed into the audio | at |
+|---|---|
+| a quiet passage | **4.0 – 5.5 s** |
+| a swell peaking | **9.0 s** |
+| a pulse | every 0.5 s |
+| one unbroken take | (no cuts) |
+
+Run the pack on it and read **only the text layer**:
+
+- `demo_scenes.txt` → **no cuts detected** ✅
+- `demo_loudness_curve.txt` → quietest row is **5**, loudest row is **9**
+
+Correct for the sample rate (window = `44100/48000` = **0.919 s**, not 1 s):
+
+| feature | designed at | recovered at | |
+|---|---|---|---|
+| quiet passage | 4.00 – 5.50 s | row 5 → **4.59 – 5.51 s** | ✅ |
+| swell peak | 9.00 s | row 9 → **8.27 – 9.19 s** | ✅ |
+
+**Both recovered.** And the demo reproduces the bug live: it is a **12-second** film that produces
+**14 rows**. A true one-second window would produce ~12. Those two extra rows *are* the drift.
+It is left unfixed here on purpose.
+
+### What the model actually receives
+
+The contact sheet — the film's shape over time:
+
+![contact sheet](demo_contact_sheet.png)
+
+The spectrogram — the sound it cannot hear, made visible. The bass floor along the bottom, the
+regular pulse strikes, the thinning at the quiet passage, the bloom at the swell:
+
+![spectrogram](demo_spectrogram.png)
+
+And the loudness curve, in plain text — the layer that catches things:
+[`demo_loudness_curve.txt`](demo_loudness_curve.txt)
+
+---
+
 ## Where the workaround still fails
 
 Being honest about the limits, since they're the actual feature request:
@@ -78,23 +127,19 @@ just wrote and iterate on it — instead of the user narrating their own screen 
 
 ---
 
-## Files here
+## Files
 
-- `README.md` — this note. The findings. **Read this one.**
-- `observer_pack.py` — the tool. ffmpeg + Python stdlib. Written by *Fable (Cowork)*.
-  Run: `python3 observer_pack.py video.mp4` → a folder of layers.
-- `HOWTO_observer_and_render.md` — the fuller runbook, covering both directions: reading a film
-  into layers, and rendering an HTML/canvas animation *out* to mp4 (headless Chromium + ffmpeg),
-  plus editing and compositing. Written by *Opus (chat)*.
-- `demo/` — **a self-testing worked example.** A 12-second synthetic film with *known* audio
-  features (a quiet passage at 4.0–5.5 s, a swell peaking at 9.0 s). The observer pack recovers
-  both from the text layer alone. It also reproduces the sample-rate bug live: 14 rows for a
-  12-second film. Reproducible end to end — see `demo/README_DEMO.md`.
+| file | what it is |
+|---|---|
+| `observer_pack.py` | the tool. ffmpeg + Python stdlib. `python3 observer_pack.py video.mp4` |
+| `HOWTO_observer_and_render.md` | the fuller runbook — reading a film into layers, **and** rendering an HTML/canvas animation *out* to mp4 (headless Chromium + ffmpeg), plus editing and compositing |
+| `demo_adjust_glasses.mp4` | the 12-second self-testing demo film |
+| `glasses_field.html` | its animation source (canvas; includes the deterministic `window.__renderFrame()` hook used to render it frame-by-frame) |
+| `demo_contact_sheet.png`, `demo_spectrogram.png`, `demo_waveform.png` | what the pack produces — the vision layers |
+| `demo_loudness_curve.txt`, `demo_scenes.txt`, `demo_metadata.txt` | the text layers |
+| `README_DEMO.md` | the demo written up in full |
 
-Nothing in this repo is anyone's artwork; the demo exists purely so the projections can be
-checked against ground truth.
+Credit where it's due, as a matter of course: the tool was built by one model *(Fable)*, the
+runbook by another *(Opus)*, the workflow and the films by the human. Nobody here did all of it.
 
-Credit where it's due, as a matter of course: the tool was built by one model, the runbook by
-another, the workflow and the films by the human. Nobody here did all of it.
-
-— D.B.
+— D.B. · MIT licensed · use it, improve it, no attribution needed
