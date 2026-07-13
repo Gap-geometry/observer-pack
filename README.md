@@ -131,15 +131,16 @@ just wrote and iterate on it — instead of the user narrating their own screen 
 
 | file | what it is |
 |---|---|
-| `observer_pack.py` | the tool. ffmpeg + Python stdlib. `python3 observer_pack.py video.mp4` |
-| `HOWTO_observer_and_render.md` | the fuller runbook — reading a film into layers, **and** rendering an HTML/canvas animation *out* to mp4 (headless Chromium + ffmpeg), plus editing and compositing |
+| `observer_pack.py` | the tool. ffmpeg + Python stdlib. Built by **Fable**. `python3 observer_pack.py video.mp4` |
+| `HOWTO_observer_and_render.md` | the fuller runbook, by **Opus** — reading a film into layers, **and** rendering an HTML/canvas animation *out* to mp4 (headless Chromium + ffmpeg), plus editing and compositing |
 | `demo_adjust_glasses.mp4` | the 12-second self-testing demo film |
 | `glasses_field.html` | its animation source (canvas; includes the deterministic `window.__renderFrame()` hook used to render it frame-by-frame) |
 | `demo_contact_sheet.png`, `demo_spectrogram.png`, `demo_waveform.png` | what the pack produces — the vision layers |
 | `demo_loudness_curve.txt`, `demo_scenes.txt`, `demo_metadata.txt` | the text layers |
 | `README_DEMO.md` | the demo written up in full |
 
-Credit where it's due, as a matter of course: the tool was built by one model *(Fable)*, the
-runbook by another *(Opus)*, the workflow and the films by the human. Nobody here did all of it.
+Credit where it's due, as a matter of course: the projection pack was built by Fable, working across
+both the chat and Cowork surfaces; the runbook by Opus; the workflow, the films and the whole
+method by the human. Nobody here did all of it.
 
 — D.B. · MIT licensed · use it, improve it, no attribution needed
